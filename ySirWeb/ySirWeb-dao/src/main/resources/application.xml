@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!--    扫描指定包，如果发现有指定注解，那么该类将由Spring进行管理。-->
+    <context:component-scan base-package="com.qf"/>
+    <!--    加载外部jdbc文件-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!--    连接jdbc连接池-->
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="defaultAutoCommit" value="true"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+    </bean>
+    <bean name="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--    用于创建dao实体类-->
+    <bean name="sessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <!--   用于扫描目标mapper.xml对象-->
+        <property name="mapperLocations" value="classpath:com/qf/dao/*Mapper.xml"></property>
+<!--        <property name="mapperLocations" value="classpath*:com/qf"/>-->
+        <property name="plugins">
+            <set>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <props>
+                            <!-- 配置数据库方言 -->
+                            <prop key="helperDialect">mysql</prop>
+                            <!-- 当pageNum<1时，默认查询第一页
+                                当pageNum>totalPage时，默认查询最后一页-->
+                            <prop key="reasonable">true</prop>
+                            <!-- 支持接口传参-->
+                            <prop key="supportMethodsArguments">true</prop>
+                        </props>
+                    </property>
+                </bean>
+            </set>
+        </property>
+    </bean>
+    <!--    spring下的用于扫描xml文件的包-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.qf.dao"></property>
+    </bean>
+</beans>
